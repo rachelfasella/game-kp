@@ -5,6 +5,7 @@
 #include <ctime>
 #include <windows.h>
 #include <cmath>
+#include <limits>
 
 using namespace std;
 
@@ -38,6 +39,11 @@ void warna(int w) {
 }
 
 void cls() { system("cls"); }
+
+void clearInput() {
+    cin.clear();
+    cin.ignore(numeric_limits<streamsize>::max(), '\n');
+}
 
 void box(string s, int w) {
     warna(w);
@@ -129,27 +135,79 @@ void genSoal(int s, string &tanya, int &jawab) {
     }
 }
 
+string getFileName(int slot) {
+    return "savegame_" + to_string(slot) + ".txt";
+}
+
+string intipSlot(int slot) {
+    ifstream f(getFileName(slot));
+    string nama;
+    if(f.is_open()) {
+        getline(f, nama); 
+        return nama;
+    }
+    return "<KOSONG>";
+}
+
 void save(Char p) {
-    ofstream f("savefile.txt");
+    cls();
+    box("PILIH SLOT PENYIMPANAN", 11);
+    cout << "Slot 1: " << intipSlot(1) << endl;
+    cout << "Slot 2: " << intipSlot(2) << endl;
+    cout << "Slot 3: " << intipSlot(3) << endl;
+    cout << "--------------------------------\n";
+    cout << "Pilih Slot (1-3) >> ";
+    
+    int slot;
+    while(!(cin >> slot) || slot < 1 || slot > 3) {
+        clearInput();
+        cout << "Slot tidak valid! Masukkan angka 1, 2, atau 3 >> ";
+    }
+
+    cin.ignore(numeric_limits<streamsize>::max(), '\n');
+    
+    ofstream f(getFileName(slot));
     if(f.is_open()) {
         f << p.nick << endl << p.job << endl << p.lvl << endl << p.xp << endl << p.mxp << endl;
         f << p.hp << endl << p.mhp << endl << p.mp << endl << p.mmp << endl;
         f << p.atk << endl << p.def << endl << p.duit << endl << p.pot << endl << p.stage;
         f.close();
-        warna(10); cout << ">> Game Saved Successfully!\n"; warna(15);
+        warna(10); cout << ">> Game Saved to Slot " << slot << " Successfully!\n"; warna(15);
+    } else {
+        cout << "Gagal membuka file!\n";
     }
+
 }
 
 bool load(Char &p) {
-    ifstream f("savefile.txt");
+    cls();
+    box("LOAD GAME", 11);
+    cout << "Slot 1: " << intipSlot(1) << endl;
+    cout << "Slot 2: " << intipSlot(2) << endl;
+    cout << "Slot 3: " << intipSlot(3) << endl;
+    cout << "--------------------------------\n";
+    cout << "Pilih Slot (1-3) >> ";
+
+    int slot;
+    while(!(cin >> slot) || slot < 1 || slot > 3) {
+        clearInput();
+        cout << "Slot tidak valid! Masukkan angka 1, 2, atau 3 >> ";
+    }
+
+    ifstream f(getFileName(slot));
     if(f.is_open()) {
         getline(f, p.nick); getline(f, p.job); 
         f >> p.lvl >> p.xp >> p.mxp;
         f >> p.hp >> p.mhp >> p.mp >> p.mmp;
         f >> p.atk >> p.def >> p.duit >> p.pot >> p.stage;
         f.close();
+        cout << "Berhasil memuat data " << p.nick << "!\n";
+        Sleep(1000);
         return true;
     }
+    
+    cout << "Slot kosong atau file rusak!\n";
+    Sleep(1000);
     return false;
 }
 
@@ -180,11 +238,19 @@ void camp(Char &p) {
         cout << "[4] Upgrade Armor (Def+5)  - 200 G\n";
         cout << "[5] Cek Status Hero\n";
         cout << "[6] Save Game\n";
+        cout << "[7] Save & Exit (Simpan & Keluar)\n";
         cout << "[0] Kembali Bertualang\n";
         cout << "Gold kamu: " << p.duit << "\n";
         cout << ">> ";
         
         char pil; cin >> pil;
+
+        if (pil != '1' && pil != '2' && pil != '3' && pil != '4' && pil != '5' && pil != '6' && pil != '7' && pil != '0') {
+            cout << "Menu tidak tersedia! Pilih 0-7.\n";
+            Sleep(1000);
+            continue;
+        }
+
         if(pil == '1') {
             if(p.duit >= 50) { p.duit-=50; p.pot++; cout << "Beli Potion sukses!\n"; }
             else cout << "Gold kurang!\n";
@@ -206,7 +272,16 @@ void camp(Char &p) {
             else cout << "Gold kurang!\n";
         }
         else if(pil == '5') info(p);
-        else if(pil == '6') save(p);
+        else if(pil == '6') {
+            save(p);
+            system("pause");
+        }
+        else if(pil == '7') {
+            save(p);
+            cout << "Keluar dari game...\n";
+            Sleep(1000);
+            exit(0);
+        }
         else if(pil == '0') break;
         Sleep(800);
     }
@@ -253,6 +328,14 @@ void mainGame(Char &p) {
         
         char op; cin >> op;
 
+        if (op != '1' && op != '2' && op != '3') {
+            warna(12);
+            cout << "Input tidak sesuai! Pilih [1], [2], atau [3].\n";
+            warna(15);
+            Sleep(1000); 
+            continue;
+        }
+
         if (op == '3') {
             if(p.pot > 0) {
                 p.pot--;
@@ -282,7 +365,7 @@ void mainGame(Char &p) {
                 Sleep(1000); continue;
             }
         }
-        else {
+        else if (op == '1') {
             cout << "Jawab >> "; cin >> ans;
             if(ans == key) {
                 mhp -= p.atk;
@@ -330,6 +413,11 @@ int main() {
     box("THE MATH RPG: LEGENDARY EDITION", 14);
     cout << "1. New Game\n2. Load Game\n3. Exit\nPilih >> ";
     char menu; cin >> menu;
+    while(menu != '1' && menu != '2' && menu != '3') {
+        clearInput();
+        cout << "Menu tidak valid! Pilih 1, 2, atau 3 >> ";
+        cin >> menu;
+    }
 
     if(menu == '2') {
         if(!load(p)) {
@@ -343,6 +431,12 @@ int main() {
         cout << "Pilih Job Class:\n[K] Knight (HP Tinggi, Def Tinggi)\n[M] Mage (Mana Tinggi, Skill Sakit)\nPilih (K/M): ";
         char j; cin >> j;
         
+        while(tolower(j) != 'k' && tolower(j) != 'm') {
+            clearInput();
+            cout << "Pilihan tidak valid! Pilih K atau M >> ";
+            cin >> j;
+        }
+
         p.lvl = 1; p.xp = 0; p.mxp = 50;
         p.duit = 50; p.pot = 2; p.stage = 0;
 
